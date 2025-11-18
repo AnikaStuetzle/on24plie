@@ -3,9 +3,6 @@
     <router-link to="/exercises" class="navlink" active-class="active"
       >Übungen</router-link
     >
-    <router-link to="/workouts" class="navlink" active-class="active"
-      >Workouts</router-link
-    >
     <router-link to="/sessions" class="navlink" active-class="active"
       >Training</router-link
     >
@@ -14,9 +11,6 @@
     >
     <router-link to="/lexicon" class="navlink" active-class="active"
       >Lexikon</router-link
-    >
-    <router-link to="/account" class="navlink" active-class="active"
-      >Account</router-link
     >
     <a href="#" @click.prevent="logout" class="navlink logout">Logout</a>
   </nav>

@@ -1,5 +1,13 @@
 import { Router } from "https://deno.land/x/oak@v12.6.1/mod.ts";
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
+import { DB } from "https://deno.land/x/sqlite/mod.ts";
+
+const db = new DB("./datenbank/workouts.db");
+db.query(`CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE,
+  password TEXT
+)`);
 
 const router = new Router();
 
@@ -14,27 +22,21 @@ router.post("/api/auth/register", async (ctx) => {
 		};
 		return;
 	}
-
-	// User laden (oder [] wenn Datei leer)
-	let users: Array<any> = [];
-	try {
-		const raw = await Deno.readTextFile("./db/users.json");
-		users = JSON.parse(raw);
-	} catch (_) {
-		users = [];
-	}
-
-	// Existiert der Nutzer?
-	if (users.some((u) => u.username === username)) {
+	// Prüfe, ob der Nutzername existiert (in der Datenbank!)
+	const userExists = [
+		...db.query("SELECT id FROM users WHERE username = ?", [username]),
+	];
+	if (userExists.length > 0) {
 		ctx.response.status = 409;
 		ctx.response.body = { message: "Username ist schon vergeben." };
 		return;
 	}
-
-	// Passwort hashen
+	// Passwort hashen und User speichern
 	const hash = await bcrypt.hash(password);
-	users.push({ username, password: hash });
-	await Deno.writeTextFile("./db/users.json", JSON.stringify(users, null, 2));
+	db.query("INSERT INTO users (username, password) VALUES (?, ?)", [
+		username,
+		hash,
+	]);
 	ctx.response.status = 201;
 	ctx.response.body = { message: "Registrierung erfolgreich!" };
 });
@@ -50,33 +52,26 @@ router.post("/api/auth/login", async (ctx) => {
 		};
 		return;
 	}
-
-	let users = [];
-	try {
-		const raw = await Deno.readTextFile("./db/users.json");
-		users = JSON.parse(raw);
-	} catch (_) {
-		users = [];
-	}
-
-	// Prüfe Username und Passwort
-	const user = users.find((u) => u.username === username);
-	if (!user) {
+	// User aus Datenbank laden
+	const userRow = [
+		...db.query("SELECT id, password FROM users WHERE username = ?", [
+			username,
+		]),
+	];
+	if (userRow.length === 0) {
 		ctx.response.status = 401;
 		ctx.response.body = { message: "Nutzername oder Passwort falsch." };
 		return;
 	}
-
-	// Passwort prüfen
-	const valid = await bcrypt.compare(password, user.password);
+	const [userId, hashedPw] = userRow[0];
+	const valid = await bcrypt.compare(password, hashedPw);
 	if (!valid) {
 		ctx.response.status = 401;
 		ctx.response.body = { message: "Nutzername oder Passwort falsch." };
 		return;
 	}
-
 	ctx.response.status = 200;
-	ctx.response.body = { message: "Login erfolgreich!" };
+	ctx.response.body = { message: "Login erfolgreich!", userId };
 });
 
 export default router;

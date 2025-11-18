@@ -1,19 +1,15 @@
 import { createRouter, createWebHistory } from "vue-router";
 import ExercisesView from "../views/ExercisesView.vue";
-import WorkoutsView from "../views/WorkoutsView.vue";
 import SessionsView from "../views/SessionsView.vue";
 import ProgressView from "../views/ProgressView.vue";
 import LexiconView from "../views/LexiconView.vue";
-import AccountView from "../views/AccountView.vue";
 import LoginView from "../views/LoginView.vue";
 
 const routes = [
 	{ path: "/exercises", component: ExercisesView },
-	{ path: "/workouts", component: WorkoutsView },
 	{ path: "/sessions", component: SessionsView },
 	{ path: "/progress", component: ProgressView },
 	{ path: "/lexicon", component: LexiconView },
-	{ path: "/account", component: AccountView },
 	{ path: "/login", component: LoginView },
 ];
 
