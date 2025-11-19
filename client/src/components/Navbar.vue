@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar" v-if="auth.isLoggedIn">
     <router-link to="/exercises" class="navlink" active-class="active"
-      >Übungen</router-link
+      >Choreographie</router-link
     >
     <router-link to="/sessions" class="navlink" active-class="active"
       >Training</router-link
