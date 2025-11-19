@@ -30,3 +30,13 @@ db.query(`
 	intensity INTEGER NOT NULL
   );
 `);
+
+db.query(`
+  CREATE TABLE IF NOT EXISTS choreos (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL,
+	difficulty TEXT NOT NULL,
+	date TEXT NOT NULL,
+	notes TEXT
+  );
+`);

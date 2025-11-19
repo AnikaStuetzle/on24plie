@@ -79,19 +79,9 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 
-const choreos = ref([
-  // Beispiel Eintrag, kannst du löschen
-  // {
-  //   id: 1,
-  //   name: "Beispielchoreo",
-  //   difficulty: "mittel",
-  //   date: "2025-11-01",
-  //   notes: "Nur zum Testen",
-  // },
-]);
-
+const choreos = ref([]);
 const showDialog = ref(false);
 const editingChoreo = ref(null);
 const formError = ref("");
@@ -112,6 +102,23 @@ const resetForm = () => {
   };
   formError.value = "";
 };
+
+// Choreos vom Backend holen
+const fetchChoreos = async () => {
+  try {
+    const res = await fetch("/api/choreos");
+    if (!res.ok) throw new Error("Konnte Choreos nicht laden.");
+    const data = await res.json();
+    choreos.value = data;
+  } catch (err) {
+    console.error(err);
+    // du könntest hier formError oder eine extra error Nachricht setzen
+  }
+};
+
+onMounted(() => {
+  fetchChoreos();
+});
 
 const openCreate = () => {
   editingChoreo.value = null;
@@ -135,7 +142,7 @@ const closeDialog = () => {
   showDialog.value = false;
 };
 
-const saveChoreo = () => {
+const saveChoreo = async () => {
   if (!form.value.name) {
     formError.value = "Name darf nicht leer sein";
     return;
@@ -149,36 +156,46 @@ const saveChoreo = () => {
     return;
   }
 
-  if (editingChoreo.value) {
-    // Update
-    const index = choreos.value.findIndex(
-      (c) => c.id === editingChoreo.value.id
-    );
-    if (index !== -1) {
-      choreos.value[index] = {
-        ...choreos.value[index],
-        ...form.value,
-      };
+  try {
+    if (editingChoreo.value) {
+      // Update
+      const res = await fetch(`/api/choreos/${editingChoreo.value.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form.value),
+      });
+      if (!res.ok) throw new Error("Fehler beim Aktualisieren.");
+    } else {
+      // Create
+      const res = await fetch("/api/choreos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form.value),
+      });
+      if (!res.ok) throw new Error("Fehler beim Speichern.");
     }
-  } else {
-    // Create
-    const newId =
-      choreos.value.length > 0
-        ? Math.max(...choreos.value.map((c) => c.id)) + 1
-        : 1;
 
-    choreos.value.push({
-      id: newId,
-      ...form.value,
-    });
+    showDialog.value = false;
+    await fetchChoreos();
+  } catch (err) {
+    console.error(err);
+    formError.value = err.message || "Fehler beim Speichern.";
   }
-
-  showDialog.value = false;
 };
 
-const deleteChoreo = (id) => {
+const deleteChoreo = async (id) => {
   if (!confirm("Choreografie wirklich löschen?")) return;
-  choreos.value = choreos.value.filter((c) => c.id !== id);
+
+  try {
+    const res = await fetch(`/api/choreos/${id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Fehler beim Löschen.");
+    await fetchChoreos();
+  } catch (err) {
+    console.error(err);
+    // wenn du willst, eine Meldung anzeigen
+  }
 };
 
 const formatDate = (value) => {

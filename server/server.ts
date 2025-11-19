@@ -3,6 +3,8 @@ import { oakCors } from "https://deno.land/x/cors/mod.ts";
 import authRouter from "./routes/auth.ts";
 import lexiconRouter from "./routes/lexicon.ts";
 import sessionsRouter from "./routes/sessions.ts";
+import progressRouter from "./routes/progress.ts";
+import exercisesRouter from "./routes/exercises.ts";
 
 const PORT = 8000;
 
@@ -25,6 +27,12 @@ console.log("✅ Lexicon-Router geladen");
 
 app.use(sessionsRouter.routes());
 app.use(sessionsRouter.allowedMethods());
+
+app.use(progressRouter.routes());
+app.use(progressRouter.allowedMethods());
+
+app.use(exercisesRouter.routes());
+app.use(exercisesRouter.allowedMethods());
 
 // 404 Middleware
 app.use((ctx) => {

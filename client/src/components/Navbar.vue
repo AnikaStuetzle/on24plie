@@ -1,81 +1,155 @@
 <template>
-  <nav class="navbar" v-if="auth.isLoggedIn">
-    <router-link to="/exercises" class="navlink" active-class="active"
-      >Choreographie</router-link
-    >
-    <router-link to="/sessions" class="navlink" active-class="active"
-      >Training</router-link
-    >
-    <router-link to="/progress" class="navlink" active-class="active"
-      >Fortschritt</router-link
-    >
-    <router-link to="/lexicon" class="navlink" active-class="active"
-      >Lexikon</router-link
-    >
-    <a href="#" @click.prevent="logout" class="navlink logout">Logout</a>
-  </nav>
+  <header class="nav-wrapper">
+    <nav class="navbar">
+      <!-- Brand links -->
+      <div class="brand">
+        Plié <span class="brand-of">von</span>
+        <span class="brand-name">
+          {{ auth.user?.username }}
+        </span>
+      </div>
+
+      <!-- Navigation in der Mitte -->
+      <div class="nav-links">
+        <RouterLink to="/exercises" class="nav-link" active-class="active">
+          Choreographie
+        </RouterLink>
+
+        <RouterLink to="/sessions" class="nav-link" active-class="active">
+          Training
+        </RouterLink>
+
+        <RouterLink to="/progress" class="nav-link" active-class="active">
+          Statistik
+        </RouterLink>
+
+        <RouterLink to="/lexicon" class="nav-link" active-class="active">
+          Lexikon
+        </RouterLink>
+      </div>
+
+      <!-- Logout rechts -->
+      <button class="logout" @click="handleLogout">Logout</button>
+    </nav>
+  </header>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { useRouter, RouterLink } from "vue-router";
 import { useAuthStore } from "../stores/authStore";
-import { useRouter } from "vue-router";
 
-const auth = useAuthStore();
 const router = useRouter();
+const auth = useAuthStore();
 
-function logout() {
+const handleLogout = () => {
   auth.logout();
   router.push("/login");
-}
+};
 </script>
 
 <style scoped>
+.nav-wrapper {
+  padding: 18px 40px 8px;
+}
+
+/* Die weiße Kapsel */
 .navbar {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 8px 32px rgba(170, 130, 145, 0.2);
+  padding: 10px 18px;
+}
+
+/* Brand links */
+
+.brand {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #3d2431;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.brand-of {
+  font-weight: 400;
+  margin: 0 4px;
+}
+
+.brand-name {
+  color: #c45b86;
+}
+
+/* Links in der Mitte */
+
+.nav-links {
+  display: flex;
+  gap: 12px;
   justify-content: center;
-  gap: 30px;
-  margin: 40px auto 24px auto;
-  padding: 16px 40px;
-  max-width: 900px;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.65);
-  box-shadow: 0 8px 32px rgba(180, 140, 140, 0.14);
-  backdrop-filter: blur(8px);
-  position: relative;
-  z-index: 10;
+  flex: 1;
 }
 
-.navlink {
-  padding: 9px 20px;
-  border-radius: 16px;
-  font-size: 1.09em;
-  letter-spacing: 0.7px;
-  color: #5d2246;
-  background: rgba(240, 225, 225, 0.22);
-  box-shadow: 0 2px 10px rgba(192, 140, 160, 0.08);
+.nav-link {
+  padding: 6px 18px;
+  border-radius: 999px;
   text-decoration: none;
-  font-weight: 500;
-  transition: background 0.22s, color 0.18s, box-shadow 0.25s;
+  font-size: 0.9rem;
+  color: #5c3c4c;
+  background: transparent;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.navlink:hover,
-.navlink.active {
-  background: linear-gradient(90deg, #d5b8c2 35%, #e7c3c7 100%);
-  color: #a74c82;
-  box-shadow: 0 2px 16px rgba(170, 110, 140, 0.2);
+.nav-link.active {
+  background: linear-gradient(90deg, #f2c2d1 0%, #e3b9cf 100%);
+  color: #3c2230;
+  box-shadow: 0 4px 14px rgba(200, 150, 170, 0.4);
 }
+
+.nav-link:hover {
+  background: rgba(243, 216, 228, 0.6);
+}
+
+/* Logout rechts */
 
 .logout {
-  background: rgba(255, 215, 215, 0.18);
-  color: #ba2246;
-  font-weight: 600;
   border: none;
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #ffe4ea;
+  color: #d13050;
+  transition: background 0.15s ease, transform 0.1s ease;
 }
 
 .logout:hover {
-  background: linear-gradient(90deg, #f4c7d0 0%, #f9dadc 100%);
-  color: #cb2250;
-  box-shadow: 0 2px 16px rgba(230, 110, 140, 0.11);
+  background: #ffd1dd;
+  transform: translateY(-1px);
+}
+
+/* Responsive */
+
+@media (max-width: 720px) {
+  .nav-wrapper {
+    padding: 12px 12px 4px;
+  }
+
+  .navbar {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .nav-links {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .logout {
+    align-self: center;
+  }
 }
 </style>
