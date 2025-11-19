@@ -1,104 +1,128 @@
 <template>
   <div class="login-container">
-    <h2>Login</h2>
-    <form @submit.prevent="login">
-      <input v-model="username" placeholder="Username" />
-      <input v-model="password" type="password" placeholder="Passwort" />
-      <button>Login</button>
+    <h2>{{ isRegisterMode ? "Registrieren" : "Login" }}</h2>
+
+    <form @submit.prevent="onSubmit">
+      <input
+        v-model="username"
+        placeholder="Username"
+        autocomplete="username"
+      />
+
+      <input
+        v-model="password"
+        type="password"
+        placeholder="Passwort"
+        autocomplete="current-password"
+      />
+
+      <button type="submit">
+        {{ isRegisterMode ? "Account erstellen" : "Einloggen" }}
+      </button>
+
       <p v-if="error">{{ error }}</p>
     </form>
+
+    <button class="toggle" @click="toggleMode">
+      <span v-if="isRegisterMode">
+        Du hast schon einen Account? Hier einloggen
+      </span>
+      <span v-else> Noch kein Account? Hier registrieren </span>
+    </button>
   </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "../stores/auth"; // relativer Import
+import { useAuthStore } from "../stores/authStore";
 
 const username = ref("");
 const password = ref("");
 const error = ref("");
-const router = useRouter();
-const auth = useAuthStore();
+const isRegisterMode = ref(false);
 
-const login = async () => {
+const router = useRouter();
+const authStore = useAuthStore();
+
+const onSubmit = async () => {
   error.value = "";
-  try {
-    const res = await fetch("http://localhost:8010/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: username.value,
-        password: password.value,
-      }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      auth.setUser({ username: username.value });
-      router.push("/exercises");
-    } else {
-      error.value = data.message || "Login fehlgeschlagen.";
-    }
-  } catch (e) {
-    error.value = "Netzwerkfehler: " + e;
+
+  if (!username.value || !password.value) {
+    error.value = "Bitte Username und Passwort eingeben";
+    return;
   }
+
+  try {
+    if (isRegisterMode.value) {
+      await authStore.register(username.value, password.value);
+    } else {
+      await authStore.login(username.value, password.value);
+    }
+
+    // Weiterleitung nach erfolgreichem Login oder Registrierung
+    router.push("/progress");
+  } catch (err) {
+    error.value = err.message || "Etwas ist schiefgelaufen";
+  }
+};
+
+const toggleMode = () => {
+  isRegisterMode.value = !isRegisterMode.value;
+  error.value = "";
 };
 </script>
 
 <style scoped>
 .login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 80px;
+  padding: 25px;
+  border-radius: 12px;
+  background: #f9f4f6;
+  box-shadow: 0 0 18px rgba(186, 152, 165, 0.35);
   max-width: 340px;
-  margin: 80px auto 0 auto;
-  padding: 32px 28px 24px 28px;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 22px;
-  box-shadow: 0 8px 32px rgba(180, 140, 140, 0.16);
-  backdrop-filter: blur(12px);
-  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .login-container h2 {
-  margin-bottom: 18px;
-  font-weight: 500;
-  letter-spacing: 1px;
+  margin-bottom: 15px;
+  color: #4b2d3a;
+  font-weight: 600;
+  letter-spacing: 0.03em;
 }
 
 .login-container form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  width: 100%;
 }
 
 .login-container input {
-  padding: 10px 14px;
-  font-size: 1rem;
-  border: none;
-  border-radius: 14px;
-  background: rgba(240, 225, 225, 0.4);
-  box-shadow: 0 1px 8px rgba(180, 140, 140, 0.13);
-  transition: background 0.2s;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d9c2cf;
+  font-size: 14px;
+  background: #fff;
 }
 
-.login-container input:focus {
-  outline: none;
-  background: rgba(250, 210, 220, 0.44);
-}
-
-.login-container button {
-  padding: 10px 20px;
-  font-size: 1rem;
-  border-radius: 14px;
+.login-container button[type="submit"] {
+  padding: 9px 12px;
   border: none;
-  background: linear-gradient(90deg, #d5b8c2 35%, #e7c3c7 100%);
-  color: #5d2246;
-  font-weight: 500;
-  box-shadow: 0 1px 8px rgba(192, 140, 160, 0.17);
+  border-radius: 8px;
   cursor: pointer;
+  background: linear-gradient(90deg, #f2c2d1 0%, #e3b9cf 100%);
+  color: #442533;
+  font-weight: 600;
   margin-top: 7px;
   transition: background 0.28s;
 }
 
-.login-container button:hover {
+.login-container button[type="submit"]:hover {
   background: linear-gradient(90deg, #e7c3c7 0%, #d5b8c2 100%);
 }
 
@@ -106,5 +130,15 @@ const login = async () => {
   color: #b35c6a;
   font-size: 0.95em;
   margin-top: 2px;
+}
+
+.toggle {
+  margin-top: 10px;
+  border: none;
+  background: none;
+  color: #6b4a5b;
+  font-size: 0.9em;
+  cursor: pointer;
+  text-decoration: underline;
 }
 </style>

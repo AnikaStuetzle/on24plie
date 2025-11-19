@@ -1,3 +1,4 @@
+// server/routes/auth.ts
 import { Router } from "https://deno.land/x/oak@v12.6.1/mod.ts";
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
 import { db } from "../db.ts";
@@ -18,7 +19,6 @@ router.post("/api/auth/register", async (ctx) => {
 	const exists = [
 		...db.query("SELECT id FROM users WHERE username = ?", [username]),
 	];
-
 	if (exists.length > 0) {
 		ctx.response.status = 409;
 		ctx.response.body = { message: "Nutzername bereits vergeben." };
@@ -60,7 +60,13 @@ router.post("/api/auth/login", async (ctx) => {
 	}
 
 	const [userId, hashedPw] = rows[0];
-	const valid = await bcrypt.compare(password, String(hashedPw));
+
+	let valid = false;
+	try {
+		valid = await bcrypt.compare(password, String(hashedPw));
+	} catch (_err) {
+		valid = false;
+	}
 
 	if (!valid) {
 		ctx.response.status = 401;
