@@ -72,28 +72,51 @@ export default {
   methods: {
     async fetchLexicon() {
       try {
-        const res = await fetch("http://localhost:8010/api/lexicon");
+        const res = await fetch("http://localhost:8000/api/lexicon"); // ← GEÄNDERT
         this.lexicon = await res.json();
       } catch (e) {
+        console.error("Fehler beim Laden:", e);
         this.lexicon = [];
       }
     },
     async addEntry() {
       if (!this.newTerm.trim() || !this.newDef.trim()) return;
-      await fetch("http://localhost:8010/api/lexicon", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ term: this.newTerm, definition: this.newDef }),
-      });
-      this.newTerm = "";
-      this.newDef = "";
-      await this.fetchLexicon();
+      try {
+        const response = await fetch("http://localhost:8000/api/lexicon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ term: this.newTerm, definition: this.newDef }),
+        });
+
+        if (response.ok) {
+          this.newTerm = "";
+          this.newDef = "";
+          await this.fetchLexicon();
+        } else {
+          const error = await response.json();
+          console.error("Fehler vom Server:", error.message);
+          alert(error.message || "Fehler beim Hinzufügen");
+        }
+      } catch (e) {
+        console.error("Fehler beim Hinzufügen:", e);
+        alert("Netzwerkfehler beim Hinzufügen");
+      }
     },
     async deleteEntry(id) {
-      await fetch(`http://localhost:8010/api/lexicon/${id}`, {
-        method: "DELETE",
-      });
-      await this.fetchLexicon();
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/lexicon/${id}`,
+          {
+            method: "DELETE",
+          }
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        await this.fetchLexicon();
+      } catch (e) {
+        console.error("Fehler beim Löschen:", e);
+      }
     },
     startEdit(entry) {
       this.editId = entry.id;
@@ -101,16 +124,26 @@ export default {
       this.editDef = entry.definition;
     },
     async saveEdit(id) {
-      await fetch(`http://localhost:8010/api/lexicon/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          term: this.editTerm,
-          definition: this.editDef,
-        }),
-      });
-      this.editId = null;
-      await this.fetchLexicon();
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/lexicon/${id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              term: this.editTerm,
+              definition: this.editDef,
+            }),
+          }
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        this.editId = null;
+        await this.fetchLexicon();
+      } catch (e) {
+        console.error("Fehler beim Speichern:", e);
+      }
     },
     cancelEdit() {
       this.editId = null;
@@ -239,5 +272,3 @@ li strong {
   padding: 0.5rem 0;
 }
 </style>
---- ## **Backend-Ergänzung (PUT für Bearbeiten)** Dein lexicon-Router braucht
-zusätzlich:
