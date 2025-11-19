@@ -7,7 +7,6 @@ import LexiconView from "../views/LexiconView.vue";
 import LoginView from "../views/LoginView.vue";
 
 const routes = [
-	// Startseite leitet direkt auf /exercises
 	{
 		path: "/",
 		redirect: "/exercises",
@@ -37,13 +36,11 @@ const routes = [
 		name: "login",
 		component: LoginView,
 	},
-	// /register zeigt dieselbe View wie /login, nur anderes Mode im Frontend
 	{
 		path: "/register",
 		name: "register",
 		component: LoginView,
 	},
-	// Fallback: unbekannte Pfade auf /exercises umbiegen
 	{
 		path: "/:pathMatch(.*)*",
 		redirect: "/exercises",
@@ -55,7 +52,6 @@ const router = createRouter({
 	routes,
 });
 
-// Simple Auth Guard
 router.beforeEach((to, from, next) => {
 	const publicPages = ["/login", "/register"];
 	const authRequired = !publicPages.includes(to.path);
